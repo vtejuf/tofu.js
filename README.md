@@ -12,7 +12,7 @@ easy to load html&amp;js modules to page. 方便的加载能够独立运行的ht
 <p>Or a page can be split into multiple independent components.At development, invocation, replacement, expansion will be more convenient.</p>
 
 <h4>入门与文档</h4>
-<a href="http://tofujs.goodgame.asia">查看快速入门与文档</a>
+<a target='_blank' href="http://tofujs.goodgame.asia">查看快速入门与文档</a>
 
 <h4>getting started & api</h4>
-<a href="http://tofujs.goodgame.asia">getting started & api</a>
+<a target='_blank' href="http://tofujs.goodgame.asia">getting started & api</a>
