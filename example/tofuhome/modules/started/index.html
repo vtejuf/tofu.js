@@ -1,0 +1,80 @@
+<p>
+	Tofu.js需要运行环境。在开始我们的第一项目前，你需要先安装本地运行环境。
+</p>
+<p>
+	环境安装完成后，在环境根目录下，创建tofusite文件夹。完成快速入门项目后，最终的目录结构如下图所示。
+</p>
+<div class="dirtree">
+	<div>tofusite/</div>
+    <img class="activator" src="./img/dirtree.png">
+</div>
+<p>1、加载第一个组件</p>
+<p>
+	在tofusite目录下，新建index.html。用一个标签 data-tofu-module='组件名' 指定要加载的组件和插入位置。
+</p>
+<p>tofusite/index.html</p>
+<code>
+<pre>&lt;!doctype html&gt;
+    &lt;html&gt;
+        &lt;head&gt;...&lt;/head&gt;
+    &lt;body&gt;
+        &lt;div data-tofu-module='one'&gt;第一个组件&lt;/div&gt;
+        &lt;script src='./js/tofu.js'&gt;&lt;/script&gt;
+        &lt;script&gt;
+            Tofu.config({
+                module_base : '/tofusite/modules'
+            });
+            Tofu();
+        &lt;/script&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</pre>
+</code>
+<p>
+    在tofusite目录下，新建modules文件夹，用于存放我们的组件。
+</p>
+<p>
+    在modules文件夹中创建第一个组件，one。one组件只有一个简单的页面index.html和一个controller.js文件。
+</p>
+<p>modules/one/index.html</p>
+<code>
+<pre>&lt;h1&gt;你好，我是第一个组件&lt;/h1&gt;
+&lt;a id='addtwo'&gt;动态加载第二个组件&lt;/a&gt;</pre>
+</code>
+<p>modules/one/js/controller.js</p>
+<code>
+<pre>Tofu.ready('one',function(){
+    this.container.innerHTML = this.template;
+});</pre>
+</code>
+<p>现在访问 localhost/tofusite，你会看到第一个组件已经被加载到了主页面中。</p>
+<br>
+<p>2、动态加载第二个组件</p>
+<p>给第一个组件的a标签添加事件，点击它后加载第二个组件。</p>
+<p>修改 modules/one/js/controller.js</p>
+<code>
+<pre>Tofu.ready('one',function(){
+    this.container.innerHTML = this.template;
+
+    window.addtwo.addEventListener('click',function(){
+        var domtow = document.createElement('div');
+        domtow.setAttribute('data-tofu-module','two');
+        document.body.appendChild(domtow);
+        Tofu('two');
+    });
+});</pre>
+</code>
+<p>第二个组件的结构和第一个一样，index.html 和controller.js</p>
+<p>modules/two/index.html</p>
+<code>
+<pre>&lt;h1&gt;第二个组件&lt;/h1&gt;</pre>
+</code>
+<p>modules/two/js/controller.js</p>
+<code>
+<pre>Tofu.ready('two',function(){
+    this.container.innerHTML = this.template;
+});</pre>
+</code>
+<p>现在访问 localhost/tofusite，点击“动态加载第二个组件”，第二个组件被动态的加入到主页面中。</p>
+<br>
+<p>你现在已经知道Tofu.js是干什么的，以及怎么使用它。更进一步了解Tofu.js，请看文档。</p>
+<p><a href="#download">入门示例下载</a></p>

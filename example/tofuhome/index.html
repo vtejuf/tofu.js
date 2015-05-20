@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+		<title>tofo.js</title>
+		<link rel="stylesheet" type="text/css" href="./css/materialize.min.css"/>
+		<link rel="stylesheet" type="text/css" href="./css/page.css"/>
+	</head>
+	<body>
+		<div class="container">
+			<div class="col s12 m12 l12">
+				<h1 class="center-align">Tofu.js</h1>
+				<p class="logo"></p>
+				<div class="center-align">最新版本  1.0.2 <a href="#download">下载</a></div>
+			</div>
+
+			<div class="section">
+				<h4>Tofu.js 能做什么</h4>
+				<p>一套功能完整的，包含html、js的组件，可以通过Tofu.js，很容易的加入到主页面中。
+					<br>
+					<span class='orange-text text-darken-3'> *Tofu.js支持ie9+</span>
+					<br>
+					<span>
+						跟着快速入门，掌握Tofu.js的使用方法。
+					</span>
+				</p>
+			</div>
+
+			<div class="divider"></div>
+			<div class="section" id='started'>
+				<h4>快速入门</h4>
+				<div data-tofu-module='started'></div>
+			</div>
+
+			<div class="divider"></div>
+			<div class="section" id='api'>
+				<h4>文档</h4>
+				<div data-tofu-module='api'></div>
+			</div>
+
+			<div class="divider"></div>
+			<a name='download'></a>
+			<div class="section">
+				<h4>下载</h4>
+				<div data-tofu-module='download'></div>
+			</div>
+		</div>
+
+		<script type="text/javascript" src='./js/sea.js'></script>
+		<script type="text/javascript">
+			seajs.config({
+				base : '/modules',
+				paths: {
+					'cdn' : 'http://cdn.staticfile.org/'
+				},
+				alias: {
+					'jquery' : 'cdn/jquery/2.1.1-rc2/jquery.min',
+					'tofu' : '/js/tofu-1.0.2.min',
+					'materialize' : '/js/materialize.min'
+				},
+				preload:[
+					'tofu',
+					'jquery'
+				]
+			});
+			seajs.use('./js/main.js');
+		</script>
+	</body>
+</html>
