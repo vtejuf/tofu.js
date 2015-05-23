@@ -30,12 +30,17 @@
 <pre>Tofu('some_module');</pre>
 </code>
 <br>
-<p><b>Tofu.ready(module_name, callback)</b></p>
+<p><b>Tofu.ready(module_name, [depends,] callback)</b></p>
 <p> * 注册加载完成事件，controller.js加载完成后自动触发</p>
 <p> * module_name {string} 组件名</p>
+<p> * depends {array} controller.js 依赖的其他js文件，加载时请注意路径</p>
 <p> * callback {function} 回调函数 该组件对象可以通过回调函数的this指针获得</p>
 <code>
 <pre>Tofu.ready('some_module',function(){
+    console.log(this);
+})
+//or
+Tofu.ready('some_module',['./js/jquery'],function(){
     console.log(this);
 })</pre>
 </code>

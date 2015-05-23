@@ -1,8 +1,8 @@
 /*!
- * tofojs v1.0.2 (http://tofujs.goodgame.com)
- * Copyright 2015-2016 tofojs
- * MIT License (standard)
+ * tofojs v1.0.3 (http://tofujs.goodgame.com)
+ * Copyright 2015-2016 tofojs.goodgame.asia
  * Author vtejuf@163.com
+ * BSD License
  */
 function Tofu(single_module_name){
 	var smn = single_module_name;
@@ -15,9 +15,6 @@ function Tofu(single_module_name){
 		this.controller = config.module_base+"/"+module_name+'/js/controller.js';
 		this.container = container;
 		this.template;
-		this.event = {
-			ready:function(){}
-		};
 		+function Tofu(){}();
 	};
 
@@ -43,8 +40,15 @@ function Tofu(single_module_name){
 			!!self.event[this.name][type] && (delete self.event[this.name][type]);
 		};
 	Tofu.prototype.onready = function(argument){
-			self.event[this.name].isReady = true;
-			this.dispatchEvent(this.name, 'ready', argument);
+			var self_ = this;
+			var time = setTimeout(function(){
+				if(!self.event[self_.name].isReady){
+					time = setTimeout(arguments.callee,0);
+				}else{
+					clearTimeout(time);
+					self_.dispatchEvent(self_.name, 'ready', argument);
+				}
+			},0);
 		};
 
 	//加载cotroller
@@ -101,8 +105,8 @@ function Tofu(single_module_name){
 			if(mn!=''){
 				tf = new Tofu(mn, list[i]);
 				if(!self.event[mn]){
-					self.modules[mn] = tf;
 					self.event[mn]={};
+					self.event[mn].$tofu = tf;
 					loadHtml(tf);
 				}
 			}
@@ -113,11 +117,32 @@ function Tofu(single_module_name){
 };
 +function(){
 	Tofu.event = {};
-	Tofu.modules = {};
 }();
-Tofu.ready = function(module_name,callback){
-	Tofu.event[module_name].ready = callback.bind(Tofu.modules[module_name]) || function(){};
-	delete Tofu.modules[module_name];
+Tofu.ready = function(module_name, depends, callback){
+	if(typeof depends == 'function'){
+		callback = depends;
+		depends = [];
+	}
+	if(count = l = depends.length, l==0){
+		Tofu.event[module_name].isReady = true;
+		Tofu.event[module_name].ready = callback.bind(Tofu.event[module_name].$tofu) || function(){};
+		delete Tofu.event[module_name].$tofu;
+	}else{
+		for(var i=0;i<l;i++){
+			var script = document.createElement('script');
+			script.type = 'text/javascript';
+			script.src = depends[i];
+			script.onload = function(){
+				document.head.removeChild(script);
+				if(--count==0){
+					Tofu.event[module_name].isReady = true;
+					Tofu.event[module_name].ready = callback.bind(Tofu.event[module_name].$tofu) || function(){};
+					delete Tofu.event[module_name].$tofu;
+				}
+			};
+			document.head.appendChild(script);
+		}
+	}
 };
 Tofu.isReady = function(module_name){
 	return (!!Tofu.event[module_name] && Tofu.event[module_name].isReady);
