@@ -1,26 +1,39 @@
 <h5>配置</h5>
+<p><b>全局配置</b></p>
 <p><b>Tofu.config(json)</b></p>
 <p><em>module_base:string</em>，modules目录路径，默认根目录下 /modules</p>
 <p><em>async:bool</em>，异步加载html，默认true</p>
-<p><em>loadScript:function</em>，当此项被设置，停止自动加载controller.js，改为运行此配置项指定函数。用户需要在函数中手动处理controller.js的加载。当controller.js加载完成后，显示调用 this.onready()，运行Tofu对象ready事件。</p>
+<p><em>staticStamp:string</em>，给html,js文件添加时间戳，默认不添加。**loadScript开启时，忽略js文件。</p>
+<p><em>loadScript:function(module_name, container, template)</em>，当此项被设置，停止自动加载模块包含的文件。用户需要在函数中手动处理js、html等的加载。</p>
+<p>配合seajs使用</p>
 <code>
 <pre>Tofu.config({
     module_base:'/tofusite/modules',
     async:false,
-    //配合seajs使用时
     loadScript:function(){
-        var self = this;
-        seajs.use(this.controller, function(a,b){
-            self.onready();
-        });
+        seajs.use(this.controller);
+    }
+});</pre>
+</code>
+<p>无controller.js</p>
+<code>
+<pre>Tofu.config({
+    module_base:'/tofusite/modules',
+    async:false,
+    loadScript:function(module_name, container, template){
+        container.innerHTML = template;
     }
 });</pre>
 </code>
 <br>
+<p><b>局部配置</b></p>
+<p><b>Tofu('module_name',{config_json})</b></p>
+<p>配置内容与全局配置一样，针对单一模块的配置。</p>
+<br>
 <h5>方法</h5>
 <p><b>Tofu(module_name)</b></p>
 <p> * 加载组件，同名组件只加载1次</p>
-<p> * module_name {string} 组件名。指定加载某一个组件，参数为空加载所有 data-tofu-module 标签指定的组件</p>
+<p><em> * module_name {string} </em>组件名。指定加载某一个组件，参数为空加载所有 data-tofu-module 标签指定的组件</p>
 <p>加载全部组件</p>
 <code>
 <pre>Tofu();</pre>
@@ -32,23 +45,23 @@
 <br>
 <p><b>Tofu.ready(module_name, [depends,] callback)</b></p>
 <p> * 注册加载完成事件，controller.js加载完成后自动触发</p>
-<p> * module_name {string} 组件名</p>
-<p> * depends {array} controller.js 依赖的其他js文件，加载时请注意路径</p>
-<p> * callback {function} 回调函数 该组件对象可以通过回调函数的this指针获得</p>
+<p><em> * module_name {string} </em>组件名</p>
+<p><em> * depends {array} </em>controller.js 依赖的其他js/css文件，加载时请注意路径</p>
+<p><em> * callback {function} </em>回调函数 该组件对象可以通过回调函数的this指针获得</p>
 <code>
 <pre>Tofu.ready('some_module',function(){
     console.log(this);
 })
 //or
-Tofu.ready('some_module',['./js/jquery'],function(){
+Tofu.ready('some_module',['./js/jquery.js','./css/style.css'],function(){
     console.log(this);
 })</pre>
 </code>
 <br>
 <p><b>Tofu.isReady(module_name)</b></p>
 <p> * 检测组件是否加载</p>
-<p> * module_name {string} 组件名</p>
-<p> * 返回 bool</p>
+<p><em> * module_name {string} </em>组件名</p>
+<p><em> * 返回 bool</em></p>
 <code>
 <pre>Tofu.isReady('some_module')</pre>
 </code>
@@ -57,7 +70,7 @@ Tofu.ready('some_module',['./js/jquery'],function(){
 <p>当前组件绑定的Tofu对象，配置项loadScript和Tofu.ready回调函数的this均指向该对象。</p>
 <p><b>Tofu.remove(removetag)</b></p>
 <p> * 移除当前组件</p>
-<p> * removetag {bool} 移除组件的同时是否移除页面标签</p>
+<p><em> * removetag {bool} </em>移除组件的同时是否移除页面标签</p>
 <code>
 <pre>Tofu.ready('some_module',function(){
     this.remove();
@@ -66,8 +79,8 @@ Tofu.ready('some_module',['./js/jquery'],function(){
 <br>
 <p><b>Tofu.addEventListener(type, method)</b></p>
 <p> * 给当前组件添加事件</p>
-<p> * type {string} 事件名</p>
-<p> * method {func} 执行方法</p>
+<p><em> * type {string} </em>事件名</p>
+<p><em> * method {func} </em>执行方法</p>
 <code>
 <pre>Tofu.ready('some_module',function(){
     this.addEventListener('getmsg', function(argument){
@@ -78,9 +91,9 @@ Tofu.ready('some_module',['./js/jquery'],function(){
 <br>
 <p><b>Tofu.dispatchEvent(module_name, type, argument)</b></p>
 <p> * 触发事件</p>
-<p> * module_name {string} 组件名</p>
-<p> * type {string} 事件名</p>
-<p> * argument 任意类型 传给监听函数的参数</p>
+<p><em> * module_name {string} </em>组件名</p>
+<p><em> * type {string} </em>事件名</p>
+<p><em> * argument </em>任意类型 传给监听函数的参数</p>
 <code>
 <pre>Tofu.ready('some_module',function(){
     this.dispatchEvent('some_module', 'getmsg', 'im here');
@@ -89,26 +102,11 @@ Tofu.ready('some_module',['./js/jquery'],function(){
 <br>
 <p><b>Tofu.removeEventListener(type)</b></p>
 <p> * 移除当前组件的事件</p>
-<p> * type {string} 事件名</p>
+<p><em> * type {string} </em>事件名</p>
 <code>
 <pre>Tofu.ready('some_module',function(){
     this.removeEventListener('getmsg');
 })</pre>
 </code>
 <br>
-<p><b>Tofu.onReady(argument)</b></p>
-<p> * 当配置项目中声明了loadScript，则需要调用该方法触发组件对象的ready事件</p>
-<p> * argument 任意类型 传给ready函数的参数</p>
-<code>
-<pre>Tofu.config({
-    module_base:'/tofusite/modules',
-    async:false,
-    //配合seajs使用时
-    loadScript:function(){
-        var self = this;
-        seajs.use(this.controller, function(a,b){
-            self.onready();
-        });
-    }
-});</pre>
-</code>
+<p><b><del>Tofu.onReady(argument)</del></b>1.0.4废弃</p>
