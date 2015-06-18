@@ -109,6 +109,26 @@ Tofu.ready('some_module',['./js/jquery.js','./css/style.css'],function(){
 })</pre>
 </code>
 <br>
+<p><b>tofu.on([module_name/event],[event/function][,parames])</b></p>
+<p> * 根据参数类型，判断调用 addEventlistener 和 dispatchEvent</p>
+<p><em> * module_name/type {string} </em>模块名或事件名</p>
+<p><em> * event/function {string/function} </em>事件名或事件函数</p>
+<p><em> * parames {任意值} </em>参数</p>
+<code>
+<pre>Tofu.ready('some_module',function(){
+    this.on('getmsg',function(){});
+})</pre>
+</code>
+<br>
+<p><b>tofu.off(event)</b></p>
+<p> * 移除当前组件的事件，tofu.removeEventListener事件别名</p>
+<p><em> * type {string} </em>事件名</p>
+<code>
+<pre>Tofu.ready('some_module',function(){
+    this.off('getmsg');
+})</pre>
+</code>
+<br>
 <p><b><del>tofu.onReady(argument)</del></b>1.0.4废弃</p>
 <br>
 <a name='render'></a>
