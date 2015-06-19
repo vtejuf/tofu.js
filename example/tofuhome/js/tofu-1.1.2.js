@@ -1,5 +1,5 @@
 /*!
- * tofojs v1.1.1 (http://tofujs.goodgame.com)
+ * tofojs v1.1.2 (http://tofujs.goodgame.com)
  * Copyright 2015-2016 tofojs.goodgame.asia
  * Author vtejuf@163.com
  * BSD License
@@ -107,9 +107,9 @@ function Tofu(single_module_name, single_module_config){
                     source += text.slice(index, offset).replace(escapeRegExp, escapeChar);
                     index = offset + match.length;
                     if (escape) {
-                        source += "'+\n((__t=(" + escape + "))==null?'':escape(__t))+\n'";
+                        source += "'+\n((__t=(typeof " + escape + "!='undefined'?" + escape + ":null))==null?'':escape(__t))+\n'";
                     } else if (interpolate) {
-                        source += "'+\n((__t=(" + interpolate + "))==null?'':__t)+\n'";
+                        source += "'+\n((__t=(typeof " + interpolate + "!='undefined'?" + interpolate + ":null))==null?'':__t)+\n'";
                     } else if (evaluate) {
                         source += "';\n" + evaluate + "\n__p+='";
                     }
@@ -229,10 +229,12 @@ Tofu.ready = function(module_name, depends, callback){
         callback = depends;
         depends = [];
     }
+    var $tofu = Tofu.event[module_name].$tofu;
+    delete Tofu.event[module_name].$tofu;
     if(l = depends.length, l==0){
         Tofu.event[module_name].isReady = true;
-        Tofu.event[module_name].ready = callback.bind(Tofu.event[module_name].$tofu) || function(){};
-        delete Tofu.event[module_name].$tofu;
+        Tofu.event[module_name].ready = callback.bind($tofu) || function(){};
+        Tofu.event[module_name].onready && Tofu.event[module_name].onready($tofu.name,$tofu.container,$tofu.template);
         Tofu.event[module_name].ready();
     }else{
         var count = l;
@@ -255,8 +257,8 @@ Tofu.ready = function(module_name, depends, callback){
                     if(type != 'css') document.head.removeChild(tag);
                     if(--count==0){
                         Tofu.event[module_name].isReady = true;
-                        Tofu.event[module_name].ready = callback.bind(Tofu.event[module_name].$tofu) || function(){};
-                        delete Tofu.event[module_name].$tofu;
+                        Tofu.event[module_name].ready = callback.bind($tofu) || function(){};
+                        Tofu.event[module_name].onready && Tofu.event[module_name].onready($tofu.name,$tofu.container,$tofu.template);
                         Tofu.event[module_name].ready();
                     }
                 };
@@ -267,9 +269,22 @@ Tofu.ready = function(module_name, depends, callback){
     }
 };
 Tofu.isReady = function(module_name){
-    return (!!Tofu.event[module_name] && Tofu.event[module_name].isReady);
+    return (!!this.event[module_name] && this.event[module_name].isReady);
 };
 Tofu.config = function(cfg){
-    Tofu.config = cfg;
+    this.config = cfg;
+};
+Tofu.removeModule = function(module_name, rmTag){
+    var ele = document.querySelector('[data-tofu-module="'+module_name+'"]');
+    if(rmTag){
+        ele && ele.parentNode.removeChild(ele);
+    }
+    ele && delete this.event[module_name];
+};
+Tofu.on = function(module_name, type, argument){
+    this.event[module_name][type] && this.event[module_name][type](argument);
+};
+Tofu.onReady = function(module_name, callback){
+    this.event[module_name].onready = callback.bind(null);
 };
 window.$tf = Tofu;

@@ -58,12 +58,37 @@ Tofu.ready('some_module',['./js/jquery.js','./css/style.css'],function(){
 })</pre>
 </code>
 <br>
+<p><b>Tofu.onReady(module_name, callback)</b></p>
+<p> * 组件加载完成后，先于ready事件触发</p>
+<p><em> * module_name {string} </em>组件名</p>
+<p><em> * callback {func} </em>回调函数，有三个参数，分别为tofu.name, tofu.container, tofu.template</p>
+<code>
+<pre>Tofu.onReady('some_module',function(module_name, container, template){...})</pre>
+</code>
+<br>
 <p><b>Tofu.isReady(module_name)</b></p>
 <p> * 检测组件是否加载</p>
 <p><em> * module_name {string} </em>组件名</p>
 <p><em> * 返回 bool</em></p>
 <code>
 <pre>Tofu.isReady('some_module')</pre>
+</code>
+<br>
+<p><b>Tofu.removeModule(module_name, rmTag)</b></p>
+<p> * 移除指定组件</p>
+<p><em> * module_name {string} </em>组件名</p>
+<p><em> * rmTag {bool} </em>是否移除标签，默认false</p>
+<code>
+<pre>Tofu.removeModule('some_module',true)</pre>
+</code>
+<br>
+<p><b>Tofu.on(module_name, event, parames)</b></p>
+<p> * 调用组件事件</p>
+<p><em> * module_name {string} </em>组件名</p>
+<p><em> * event {string} </em>事件名</p>
+<p><em> * parames {任意值} </em>参数</p>
+<code>
+<pre>Tofu.on('some_module','some_event','some_parames')</pre>
 </code>
 <br>
 <h5>对象</h5>
@@ -89,11 +114,11 @@ Tofu.ready('some_module',['./js/jquery.js','./css/style.css'],function(){
 })</pre>
 </code>
 <br>
-<p><b>tofu.dispatchEvent(module_name, type, argument)</b></p>
+<p><b>tofu.dispatchEvent(module_name, type, parames)</b></p>
 <p> * 触发事件</p>
 <p><em> * module_name {string} </em>组件名</p>
 <p><em> * type {string} </em>事件名</p>
-<p><em> * argument </em>任意类型 传给监听函数的参数</p>
+<p><em> * parames {任意值} </em>传给监听函数的参数</p>
 <code>
 <pre>Tofu.ready('some_module',function(){
     this.dispatchEvent('some_module', 'getmsg', 'im here');

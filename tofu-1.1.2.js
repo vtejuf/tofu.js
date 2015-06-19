@@ -1,5 +1,5 @@
 /*!
- * tofojs v1.0.4 (http://tofujs.goodgame.com)
+ * tofojs v1.1.2 (http://tofujs.goodgame.com)
  * Copyright 2015-2016 tofojs.goodgame.asia
  * Author vtejuf@163.com
  * BSD License
@@ -38,6 +38,108 @@ function Tofu(single_module_name, single_module_config){
         };
     Tofu.prototype.removeEventListener = function(type){
             !!self.event[this.name][type] && (delete self.event[this.name][type]);
+        };
+    //别名 根据参数判断调用 add/dispatch
+    Tofu.prototype.on = function(){
+        if(typeof arguments[1] === 'function'){
+            this.addEventListener.apply(this,arguments);
+        }else{
+            this.dispatchEvent.apply(this,arguments);
+        }
+    };
+    //别名 removeEvent
+    Tofu.prototype.off = function(){
+        this.removeEventListener.apply(this,arguments);
+    };
+    Tofu.prototype.render = function(data, tpl){
+            var escapeMap = {
+                "&":"&amp;",
+                "<":"&lt;",
+                ">":"&gt;",
+                '"':"&quot;",
+                "'":"&#x27;",
+                "`":"&#x60;"
+            };
+
+            var createEscaper = function(map) {
+                var escaper = function(match) {
+                    return map[match];
+                };
+                var source = "(?:" + Object.keys(map).join("|") + ")";
+                var testRegexp = RegExp(source);
+                var replaceRegexp = RegExp(source, "g");
+                return function(string) {
+                    string = string == null ? "" :"" + string;
+                    return testRegexp.test(string) ? string.replace(replaceRegexp, escaper) :string;
+                };
+            };
+
+            var escape = createEscaper(escapeMap);
+
+            var settings = {
+                evaluate:/<%([\s\S]+?)%>/g,
+                interpolate:/<%=([\s\S]+?)%>/g,
+                escape:/<%-([\s\S]+?)%>/g
+            };
+
+            var noMatch = /(.)^/;
+
+            var escapes = {
+                "'":"'",
+                "\\":"\\",
+                "\r":"r",
+                "\n":"n",
+                "\u2028":"u2028",
+                "\u2029":"u2029"
+            };
+
+            var escapeRegExp = /\\|'|\r|\n|\u2028|\u2029/g;
+
+            var escapeChar = function(match) {
+                return "\\" + escapes[match];
+            };
+
+            var template = function(text) {
+                var matcher = RegExp([ (settings.escape || noMatch).source, (settings.interpolate || noMatch).source, (settings.evaluate || noMatch).source ].join("|") + "|$", "g");
+                var index = 0;
+                var source = "__p+='";
+                text.replace(matcher, function(match, escape, interpolate, evaluate, offset) {
+                    source += text.slice(index, offset).replace(escapeRegExp, escapeChar);
+                    index = offset + match.length;
+                    if (escape) {
+                        source += "'+\n((__t=(typeof " + escape + "!='undefined'?" + escape + ":null))==null?'':escape(__t))+\n'";
+                    } else if (interpolate) {
+                        source += "'+\n((__t=(typeof " + interpolate + "!='undefined'?" + interpolate + ":null))==null?'':__t)+\n'";
+                    } else if (evaluate) {
+                        source += "';\n" + evaluate + "\n__p+='";
+                    }
+                    return match;
+                });
+                source += "';\n";
+                if (!settings.variable) source = "with(obj||{}){\n" + source + "}\n";
+                source = "var __t,__p='',__j=Array.prototype.join," + "print=function(){__p+=__j.call(arguments,'');};\n" + source + "return __p;\n";
+                var render;
+                try {
+                    render = new Function(settings.variable || "obj", source);
+                } catch (e) {
+                    e.source = source;
+                    throw e;
+                }
+                var template = function(data) {
+                    return render.call(this, data);
+                };
+                var argument = settings.variable || "obj";
+                template.source = "function(" + argument + "){\n" + source + "}";
+                return template;
+            };
+
+            if(typeof data == 'string' || typeof data == 'undefined'){
+                tpl = data;
+                data = undefined;
+                return template(tpl || this.template);
+            }else{
+                return template(tpl || this.template)(data);
+            }
         };
 
     //合并config
@@ -127,10 +229,12 @@ Tofu.ready = function(module_name, depends, callback){
         callback = depends;
         depends = [];
     }
+    var $tofu = Tofu.event[module_name].$tofu;
+    delete Tofu.event[module_name].$tofu;
     if(l = depends.length, l==0){
         Tofu.event[module_name].isReady = true;
-        Tofu.event[module_name].ready = callback.bind(Tofu.event[module_name].$tofu) || function(){};
-        delete Tofu.event[module_name].$tofu;
+        Tofu.event[module_name].ready = callback.bind($tofu) || function(){};
+        Tofu.event[module_name].onready && Tofu.event[module_name].onready($tofu.name,$tofu.container,$tofu.template);
         Tofu.event[module_name].ready();
     }else{
         var count = l;
@@ -153,8 +257,8 @@ Tofu.ready = function(module_name, depends, callback){
                     if(type != 'css') document.head.removeChild(tag);
                     if(--count==0){
                         Tofu.event[module_name].isReady = true;
-                        Tofu.event[module_name].ready = callback.bind(Tofu.event[module_name].$tofu) || function(){};
-                        delete Tofu.event[module_name].$tofu;
+                        Tofu.event[module_name].ready = callback.bind($tofu) || function(){};
+                        Tofu.event[module_name].onready && Tofu.event[module_name].onready($tofu.name,$tofu.container,$tofu.template);
                         Tofu.event[module_name].ready();
                     }
                 };
@@ -165,9 +269,22 @@ Tofu.ready = function(module_name, depends, callback){
     }
 };
 Tofu.isReady = function(module_name){
-    return (!!Tofu.event[module_name] && Tofu.event[module_name].isReady);
+    return (!!this.event[module_name] && this.event[module_name].isReady);
 };
 Tofu.config = function(cfg){
-    Tofu.config = cfg;
+    this.config = cfg;
+};
+Tofu.removeModule = function(module_name, rmTag){
+    var ele = document.querySelector('[data-tofu-module="'+module_name+'"]');
+    if(rmTag){
+        ele && ele.parentNode.removeChild(ele);
+    }
+    ele && delete this.event[module_name];
+};
+Tofu.on = function(module_name, type, argument){
+    this.event[module_name][type] && this.event[module_name][type](argument);
+};
+Tofu.onReady = function(module_name, callback){
+    this.event[module_name].onready = callback.bind(null);
 };
 window.$tf = Tofu;

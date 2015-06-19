@@ -12,7 +12,7 @@
 			<div class="col s12 m12 l12">
 				<h1 class="center-align">Tofu.js</h1>
 				<p class="logo"></p>
-				<div class="center-align">最新版本  1.1.1 <a href="#download">下载</a></div>
+				<div class="center-align">最新版本  1.1.2 <a href="#download">下载</a></div>
 			</div>
 
 			<div class="section">
@@ -49,33 +49,18 @@
 			<a name='download'></a>
 			<div class="section">
 				<h4>下载</h4>
-				<p><a target='_blank' href="https://github.com/vtejuf/tofu.js/blob/master/tofu-1.1.1.min.js">tofu-1.1.1.min.js</a></p>
+				<p><a target='_blank' href="https://github.com/vtejuf/tofu.js/blob/master/tofu-1.1.2.min.js">tofu-1.1.2.min.js</a></p>
 				<p><a target='_blank' href="https://github.com/vtejuf/tofu.js">github/Tofujs</a></p>
 				<p><a target='_blank' href="https://github.com/vtejuf/tofu.js/tree/master/example/tofusite">快速入门示例</a></p>
-				<p>本站使用Tofu.js结合Seajs、Materialize完成。<a target='_blank' href="https://github.com/vtejuf/tofu.js/tree/master/example/tofuhome">本站完整代码</a></p>
+				<p><a target='_blank' href="https://github.com/vtejuf/tofu.js/tree/master/example/tofuhome">本站完整代码</a></p>
 				<p><a target='_blank' href="https://github.com/vtejuf/tofu.js/issues">反馈和问题</a></p>
 			</div>
 		</div>
 
-		<script type="text/javascript" src='./js/sea.js'></script>
+		<script type="text/javascript" src='./js/tofu-1.1.2.min.js'></script>
+		<script type="text/javascript" src='./js/libs/jquery.js'></script>
 		<script type="text/javascript">
-			seajs.config({
-				base : '/modules',
-				paths: {
-					'cdn' : 'http://cdn.staticfile.org/',
-					'libs' : '/js/libs',
-				},
-				alias: {
-					'jquery' : 'libs/jquery',
-					'tofu' : '/js/tofu-1.1.1.min',
-					'materialize' : '/js/materialize.min'
-				},
-				preload:[
-					'tofu',
-					'jquery'
-				]
-			});
-			seajs.use('./js/main.js');
+			Tofu();
 		</script>
 	</body>
 </html>
