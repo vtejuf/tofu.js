@@ -3,7 +3,7 @@
 <p><b>Tofu.config(json)</b></p>
 <p><em>module_base:string</em>，modules目录路径，默认根目录下 /modules</p>
 <p><em>async:bool</em>，异步加载html，默认true</p>
-<p><em>staticStamp:string</em>，给html,js文件添加时间戳，默认不添加。**loadScript开启时，忽略js文件。</p>
+<p><em>staticStamp:string</em>，给html,js文件添加查询字符串，默认不添加。**loadScript开启时，忽略js文件。</p>
 <p><em>loadScript:function(module_name, container, template)</em>，当此项被设置，停止自动加载模块包含的文件。用户需要在函数中手动处理js、html等的加载。</p>
 <p>配合seajs使用</p>
 <code>
@@ -12,7 +12,8 @@
     async:false,
     loadScript:function(){
         seajs.use(this.controller);
-    }
+    },
+    staticStamp:"v="+new Date().getTime()
 });</pre>
 </code>
 <p>无controller.js</p>
@@ -22,7 +23,8 @@
     async:false,
     loadScript:function(module_name, container, template){
         container.innerHTML = template;
-    }
+    },
+    staticStamp:"v=2"
 });</pre>
 </code>
 <br>

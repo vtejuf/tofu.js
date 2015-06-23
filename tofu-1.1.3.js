@@ -12,7 +12,7 @@ function Tofu(single_module_name, single_module_config){
     };
     var smn = single_module_name;
     var self = arguments.callee, config = json_merge({}, opt_def, self.config, single_module_config);
-    var staticstamp = config.staticStamp?'?'+config.staticStamp.toLowerCase()+'='+new Date().getTime():'';
+    var staticstamp = config.staticStamp?'?'+config.staticStamp.toLowerCase():'';
 
     function Tofu(module_name, container){
         this.name = module_name;
