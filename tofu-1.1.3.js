@@ -1,5 +1,5 @@
 /*!
- * tofojs v1.1.2 (http://tofujs.goodgame.com)
+ * tofojs v1.1.3 (http://tofujs.goodgame.com)
  * Copyright 2015-2016 tofojs.goodgame.asia
  * Author vtejuf@163.com
  * BSD License
@@ -234,13 +234,15 @@ Tofu.ready = function(module_name, depends, callback){
     if(l = depends.length, l==0){
         Tofu.event[module_name].isReady = true;
         Tofu.event[module_name].ready = callback.bind($tofu) || function(){};
-        Tofu.event[module_name].onready && Tofu.event[module_name].onready($tofu.name,$tofu.container,$tofu.template);
         Tofu.event[module_name].ready();
+        Tofu.event[module_name].onready && Tofu.event[module_name].onready($tofu.name,$tofu.container,$tofu.template);
     }else{
         var count = l;
         var a = document.createElement('a');
         for(var j=0;j<l;j++){
             +function(i){
+                if(!/\.(js|css)$/i.test(depends[i]))
+                    depends[i] += '.js';
                 a.href= depends[i];
                 var type = a.pathname.split('.').pop();
                 if(type=='js'){
@@ -258,12 +260,15 @@ Tofu.ready = function(module_name, depends, callback){
                     if(--count==0){
                         Tofu.event[module_name].isReady = true;
                         Tofu.event[module_name].ready = callback.bind($tofu) || function(){};
-                        Tofu.event[module_name].onready && Tofu.event[module_name].onready($tofu.name,$tofu.container,$tofu.template);
                         Tofu.event[module_name].ready();
+                        Tofu.event[module_name].onready && Tofu.event[module_name].onready($tofu.name,$tofu.container,$tofu.template);
                     }
                 };
+                tag.onerror = function(){
+                    document.head.removeChild(tag);
+                }
                 document.head.appendChild(tag);
-            }(j)
+            }(j);
         }
         delete a;
     }
