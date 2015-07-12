@@ -1,5 +1,5 @@
 /*!
- * tofojs v1.1.3 (http://tofujs.goodgame.com)
+ * tofojs v1.1.4 (http://tofujs.goodgame.com)
  * Copyright 2015-2016 tofojs.goodgame.asia
  * Author vtejuf@163.com
  * BSD License
@@ -11,7 +11,7 @@ function Tofu(single_module_name, single_module_config){
         module_base:"/modules"
     };
     var smn = single_module_name;
-    var self = arguments.callee, config = json_merge({}, opt_def, self.config, single_module_config);
+    var self = arguments.callee, config = self.tools.json_merge({}, opt_def, self.config, single_module_config);
     var staticstamp = config.staticStamp?'?'+config.staticStamp.toLowerCase():'';
 
     function Tofu(module_name, container){
@@ -19,6 +19,8 @@ function Tofu(single_module_name, single_module_config){
         this.controller = config.module_base+"/"+module_name+'/js/controller.js';
         this.container = container;
         this.template;
+        this.config = config;
+        this.config.staticstamp = staticstamp;
         +function Tofu(_self){
         }(this);
     };
@@ -51,6 +53,8 @@ function Tofu(single_module_name, single_module_config){
     Tofu.prototype.off = function(){
         this.removeEventListener.apply(this,arguments);
     };
+
+    // 模板
     Tofu.prototype.render = function(data, tpl){
             var escapeMap = {
                 "&":"&amp;",
@@ -142,21 +146,6 @@ function Tofu(single_module_name, single_module_config){
             }
         };
 
-    //合并config
-    function json_merge(){
-        var l = arguments.length, i=0, out=arguments[0];
-        while(++i<l){
-            var o = arguments[i];
-            if(typeof o != 'object'){
-                continue;
-            }
-            for(var j in o){
-                out[j] = o[j];
-            }
-        }
-        return out;
-    }
-
     //加载cotroller
     function loadScript(tf){
         if(!!config.loadScript){
@@ -221,9 +210,14 @@ function Tofu(single_module_name, single_module_config){
 
     scan_dom();
 };
-+function(){
-    Tofu.event = {};
-}();
+
+
+/**
+ * 事件
+ *
+ * 
+ */
+Tofu.event = {};
 Tofu.ready = function(module_name, depends, callback){
     if(typeof depends == 'function'){
         callback = depends;
@@ -231,33 +225,34 @@ Tofu.ready = function(module_name, depends, callback){
     }
     var $tofu = Tofu.event[module_name].$tofu;
     delete Tofu.event[module_name].$tofu;
-    if(l = depends.length, l==0){
+    var l = depends.length;
+    if(l==0){
         Tofu.event[module_name].isReady = true;
         Tofu.event[module_name].ready = callback.bind($tofu) || function(){};
         Tofu.event[module_name].ready();
         Tofu.event[module_name].onready && Tofu.event[module_name].onready($tofu.name,$tofu.container,$tofu.template);
     }else{
-        var count = l;
-        var a = document.createElement('a');
-        for(var j=0;j<l;j++){
+        var count = 0;
+        do{
             +function(i){
-                if(!/\.(js|css)$/i.test(depends[i]))
-                    depends[i] += '.js';
-                a.href= depends[i];
-                var type = a.pathname.split('.').pop();
+                var u = Tofu.tools.getDepsUri(depends[i], $tofu.controller),
+                    uri = u.uri + $tofu.config.staticstamp,
+                    type = u.type;
                 if(type=='js'){
                     var tag = document.createElement('script');
+                    tag.setAttribute('data-tofu-depend-js',module_name);
                     tag.type = 'text/javascript';
-                    tag.src = depends[i];
+                    tag.src = uri;
                 }else if(type=='css'){
                     var tag = document.createElement('link');
+                    tag.setAttribute('data-tofu-depend-css',module_name);
                     tag.type = 'text/css';
                     tag.rel = 'stylesheet';
-                    tag.href = depends[i];
+                    tag.href = uri;
                 }
                 tag.onload = function(){
                     if(type != 'css') document.head.removeChild(tag);
-                    if(--count==0){
+                    if(i >= l-1){
                         Tofu.event[module_name].isReady = true;
                         Tofu.event[module_name].ready = callback.bind($tofu) || function(){};
                         Tofu.event[module_name].ready();
@@ -268,9 +263,8 @@ Tofu.ready = function(module_name, depends, callback){
                     document.head.removeChild(tag);
                 }
                 document.head.appendChild(tag);
-            }(j);
-        }
-        delete a;
+            }(count);
+        }while(++count < l);
     }
 };
 Tofu.isReady = function(module_name){
@@ -285,6 +279,10 @@ Tofu.removeModule = function(module_name, rmTag){
         ele && ele.parentNode.removeChild(ele);
     }
     ele && delete this.event[module_name];
+    var css = document.querySelectorAll('[data-tofu-depend-css="'+module_name+'"]');
+    for(var l = css.length-1;l>=0;l--){
+        document.head.removeChild(css[l]);
+    }
 };
 Tofu.on = function(module_name, type, argument){
     this.event[module_name][type] && this.event[module_name][type](argument);
@@ -292,4 +290,205 @@ Tofu.on = function(module_name, type, argument){
 Tofu.onReady = function(module_name, callback){
     this.event[module_name].onready = callback.bind(null);
 };
+
+
+/**
+ * 工具函数
+ *
+ * 
+ */
+Tofu.tools = {
+    json_merge : function(){
+        var l = arguments.length, i=0, out=arguments[0];
+        while(++i<l){
+            var o = arguments[i];
+            if(typeof o != 'object'){
+                continue;
+            }
+            for(var j in o){
+                out[j] = o[j];
+            }
+        }
+        return out;
+    }
+
+    ,doAsync : function(opt,callback){
+        var opt_def = {
+            method : 'GET',
+            async : true,
+            dataType:'text',
+            url : null,
+            header : null
+        };
+        var method_list = ['POST', 'GET', 'PUT' ,'DELETE'],
+            dataType_list = ['text', 'json'];
+        opt = this.json_merge(opt_def, opt);
+
+        if(opt.url == null){
+            return false;
+        }
+
+        typeof opt.dataType!='string' && (opt.dataType = 'text');
+        opt.dataType = opt.dataType.toLowerCase();
+
+        typeof opt.method!='string' && (opt.method = 'GET');
+        opt.method = opt.method.toUpperCase();
+        method_list.indexOf(opt.method)<0 && (opt.method = "GET");
+
+        xmlhttp= new XMLHttpRequest();
+        xmlhttp.open(opt.method, opt.url, opt.async);
+
+        if(opt.header !== null){
+            for( var i in opt.header){
+                xmlhttp.setRequestHeader(i,opt.header[i]);
+            }
+        }
+        xmlhttp.onreadystatechange = function(){
+            if (xmlhttp.readyState==4){
+                if (xmlhttp.status==0 || xmlhttp.status==200 || xmlhttp.status==304){
+                    switch(opt.dataType){
+                    case 'json':
+                        callback(JSON.parse(xmlhttp.responseText));
+                        break;
+                    default:
+                        callback(xmlhttp.responseText);
+                        break;
+                    }
+                }
+            }
+        };
+        xmlhttp.send(null);
+    }
+
+    ,loadScript : function(opt){
+        var opt_def = {
+            module_name:null,
+            onload:function(){},
+            onerror:function(){}
+        };
+        opt = this.json_merge(opt_def, opt);
+
+        var tag = document.createElement('script');
+
+        if(!!opt.module_name)
+            tag.setAttribute('data-tofu-depend-js',opt.module_name);
+
+        tag.type = 'text/javascript';
+        tag.src = opt.src;
+
+        tag.onload = function(){
+            document.head.removeChild(tag);
+            opt.onload();
+        };
+        tag.onerror = function(){
+            document.head.removeChild(tag);
+            opt.onerror();
+        };
+        document.head.appendChild(tag);
+    }
+    ,getCurrentScript : function() {
+        if(document.currentScript) {
+            return document.currentScript.src;
+        }
+        var stack;
+        try {
+            null.a;
+        } catch(e) {
+            stack = e.stack;
+            if(!stack && window.opera){
+                stack = (String(e).match(/of linked script \S+/g) || []).join(" ");
+            }
+        }
+        if(stack) {
+            stack = stack.split( /[@ ]/g).pop();
+            stack = stack[0] == "(" ? stack.slice(1,-1) : stack;
+            return stack.replace(/(:\d+)?:\d+$/i, "");
+        }
+        var nodes = document.head.getElementsByTagName("script");
+        for(var i = 0, node; node = nodes[i++];) {
+            if(node.readyState === "interactive") {
+                return node.className = node.src;
+            }
+        }
+    }
+
+    //文件目录处理
+    ,resolve: function(uri, src){
+        var host = location.protocol + '//' + location.host;
+        var check = {
+            rel:/^\./,
+            abs:/^\//
+        };
+        var filetr = {
+            host : new RegExp('^(?:'+host+'|'+location.host+')/'),
+            dbs : /\/\//g,
+            dots: /(?:\/\.\/|\/(?:.[^\/])\/\.\.\/)/g
+        };
+        uri = uri.replace(filetr.host,'/');
+        switch(true){
+        case check.rel.test(uri):
+            src = host +'/'+ src.replace(filetr.host,'./');
+            var path = src.substr(0,src.lastIndexOf('/')+1);
+            uri = path + uri.replace(filetr.dbs,'/');
+            uri = uri.replace(filetr.dots,'/');
+            break;
+        case check.abs.test(uri):
+            uri = host + uri.replace(filetr.dbs,'/');
+            uri = uri.replace(filetr.dots,'/');
+            break;
+        }
+        return uri;
+    }
+
+    //控制器依赖文件处理
+    ,getDepsUri: function(uri, src){
+        var a = document.createElement('a');
+        a.href = Tofu.tools.resolve(uri, src);
+        if(!/\.(js|css)$/i.test(a.pathname)){
+            a.pathname += '.js';
+        }
+        var out = {
+            uri : a.href,
+            type : a.pathname.split('.').pop()
+        };
+        delete a;
+        return out;
+    }
+};
+
+
+/**
+ * pack
+ *
+ * 
+ */
+Tofu.version = '1.1.4';
 window.$tf = Tofu;
+
+
+// 修正：移除模块同时移除依赖css
+// 添加：控制器依赖文件可配置时间戳
+
+
+// cacheMod = {id:Mod}
+// define (id,deps,factory)
+//     获取当前url
+//     解析依赖uri绝对地址
+//     判断加载依赖文件
+//     Class Mod{
+//         id:id
+//         uri:url
+//         deps:{key,id},
+//         factory : func
+//         module: Class Module{
+//             uri:url
+//             dependencies:[uris],
+//             exports:{}
+//         }
+//     }
+
+//     Mod.prototype.require : function(key){
+//         cacheMod[this.deps[key]].factory(this.require, this.module, this.module.exports);
+//     }
+
+//     
