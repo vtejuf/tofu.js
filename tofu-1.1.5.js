@@ -149,7 +149,6 @@ function Tofu(single_module_name, single_module_config){
 
     //加载css
     function loadCss(tf){
-        tf.template = tf.template.replace(/(?:\/\/[\s\S]*?\n|\/\*[\s\S]*?\*\/|<!--[\s\S]*?-->|\t|[\n\r])/mg,'');
         var cssarr = peelCss(tf),
             links = cssarr[0],
             pagestyle = cssarr[1];
@@ -208,7 +207,7 @@ function Tofu(single_module_name, single_module_config){
     function cssScope(cssstr, modelname){
         var _atstr = '';
         cssstr = cssstr
-            .replace(/(?:\/\/[\s\S]*?\n|\/\*[\s\S]*?\*\/|<!--[\s\S]*?-->|\t|[\n\r])/mg,'')
+            .replace(/(?:\t|[\n\r]|\/\*[\s\S]*?\*\/)/mg,'')
             .replace(/@[\s\S]+?\}\}/g,function(str){
                 _atstr += str;
                 return '';
@@ -241,9 +240,10 @@ function Tofu(single_module_name, single_module_config){
 
     //加载html
     function loadHtml(tf){
-        var data = {
+        var htmlConstant = {
             module_url : config.module_base+"/"+tf.name
         };
+
         var filepath = config.module_base+"/"+tf.name+'/index.html'+staticstamp , xmlhttp= new XMLHttpRequest();
         xmlhttp.onreadystatechange=state_Change;
         xmlhttp.open("GET", filepath, config.async);
@@ -253,9 +253,12 @@ function Tofu(single_module_name, single_module_config){
         function state_Change(){
             if (xmlhttp.readyState==4){
                 if (xmlhttp.status==0 || xmlhttp.status==200 || xmlhttp.status==304){
-                    tf.template = xmlhttp.responseText.replace(/{{Tofu.(.+?)}}/mg, function(i,o){
-                        return data[o] || o;
-                    });
+                    tf.template = xmlhttp.responseText
+                        .replace(/(<!--[\s\S]*?-->|\t|[\n\r])/mg,'')
+                        .replace(/{{Tofu.(.+?)}}/mg, function(i,o){
+                            return htmlConstant[o] || o;
+                        });
+
                     loadCss(tf);
                     loadScript(tf);
                 }
