@@ -254,7 +254,7 @@ function Tofu(single_module_name, single_module_config){
             if (xmlhttp.readyState==4){
                 if (xmlhttp.status==0 || xmlhttp.status==200 || xmlhttp.status==304){
                     tf.template = xmlhttp.responseText
-                        .replace(/(<!--[\s\S]*?-->|\t|[\n\r])/mg,'')
+                        .replace(/(<!--[\s\S]*?-->)/mg,'')
                         .replace(/{{Tofu.(.+?)}}/mg, function(i,o){
                             return htmlConstant[o] || o;
                         });
