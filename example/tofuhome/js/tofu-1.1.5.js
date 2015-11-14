@@ -1,5 +1,6 @@
+
 /*!
- * tofojs v1.1.4 (http://tofujs.goodgame.com)
+ * tofojs v1.1.5 (http://tofujs.goodgame.com)
  * Copyright 2015-2016 tofojs.goodgame.asia
  * Author vtejuf@163.com
  * BSD License
@@ -146,6 +147,83 @@ function Tofu(single_module_name, single_module_config){
             }
         };
 
+    //加载css
+    function loadCss(tf){
+        tf.template = tf.template.replace(/(?:\/\/[\s\S]*?\n|\/\*[\s\S]*?\*\/|<!--[\s\S]*?-->|\t|[\n\r])/mg,'');
+        var cssarr = peelCss(tf),
+            links = cssarr[0],
+            pagestyle = cssarr[1];
+
+        var urlloaded={}, count=0, styles='', dom = document.createElement('style');
+
+        if(links.length > 0){
+            links.forEach(function(url){
+                self.tools.doAsync({url: url}, function(cssstr){
+                    urlloaded[url] = cssScope(cssstr, tf.name);
+                    count++;
+                });
+            });
+
+            setTimeout(function(){
+                if(count == links.length){
+                    links.forEach(function(url){
+                        styles += urlloaded[url];
+                    });
+                    dom.innerHTML = styles + pagestyle;
+                    dom.setAttribute('data-tofu-depend-css',tf.name);
+                    document.head.appendChild(dom);
+                    return;
+                }
+                setTimeout(arguments.callee,100);
+            },100);
+        }else if(pagestyle != ''){
+            dom.innerHTML = pagestyle;
+            dom.setAttribute('data-tofu-depend-css',tf.name);
+            document.head.appendChild(dom);
+        }
+    }
+    //剥离link and style
+    function peelCss(tf){
+        var tpl = tf.template;
+        var reg = /<link [\s\S]*?href=[\'\"]([ \S]+?)[\'\"][\s\S]*?>/mg;
+        var links = [];
+        tpl = tpl.replace(reg, function(){
+            var url = self.tools.resolve(RegExp.$1, config.module_base+"/"+tf.name+'/');
+            links.push(url);
+            return '';
+        });
+
+        var pagestyle = '';
+        reg = /<style[\s\S]*?>([\s\S]*?)<\/style>/mg;
+        tpl = tpl.replace(reg, function(){
+            pagestyle += cssScope(RegExp.$1, tf.name);
+            return '';
+        });
+
+        tf.template = tpl;
+
+        return [links, pagestyle];
+    }
+    //css绑定作用域
+    function cssScope(cssstr, modelname){
+        var _atstr = '';
+        cssstr = cssstr
+            .replace(/(?:\/\/[\s\S]*?\n|\/\*[\s\S]*?\*\/|<!--[\s\S]*?-->|\t|[\n\r])/mg,'')
+            .replace(/@[\s\S]+?\}\}/g,function(str){
+                _atstr += str;
+                return '';
+            })
+            .replace(/(^|\})(\s|\})*([^@\d\}\s][\s\S]*?)\{/g,function(){
+            var liststr = RegExp.$3, pre = RegExp.$1, prea = RegExp.$2;
+            if(liststr.indexOf(',')>-1){
+                liststr = liststr.replace(/,/g, ','+modelname+' ');
+            }
+            return pre + (prea.trim()?'}':'') + "[data-tofu-module="+modelname+'] ' + liststr + '{';
+
+        });
+        return _atstr + cssstr;
+    }
+
     //加载cotroller
     function loadScript(tf){
         if(!!config.loadScript){
@@ -178,6 +256,7 @@ function Tofu(single_module_name, single_module_config){
                     tf.template = xmlhttp.responseText.replace(/{{Tofu.(.+?)}}/mg, function(i,o){
                         return data[o] || o;
                     });
+                    loadCss(tf);
                     loadScript(tf);
                 }
             }
@@ -335,7 +414,7 @@ Tofu.tools = {
         opt.method = opt.method.toUpperCase();
         method_list.indexOf(opt.method)<0 && (opt.method = "GET");
 
-        xmlhttp= new XMLHttpRequest();
+        var xmlhttp= new XMLHttpRequest();
         xmlhttp.open(opt.method, opt.url, opt.async);
 
         if(opt.header !== null){
@@ -451,7 +530,7 @@ Tofu.tools = {
             uri : a.href,
             type : a.pathname.split('.').pop()
         };
-        delete a;
+        a = null;
         return out;
     }
 };
